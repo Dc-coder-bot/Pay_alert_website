@@ -1,0 +1,1861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#1a1a2e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>TuitionTrack</title>
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f1a;
+    --surface: #1a1a2e;
+    --surface2: #252540;
+    --surface3: #2e2e50;
+    --accent: #7c5cfc;
+    --accent2: #5ce0c6;
+    --accent3: #fc5c7d;
+    --text: #f0eeff;
+    --text2: #a8a0cc;
+    --text3: #6b6490;
+    --border: rgba(124,92,252,0.2);
+    --border2: rgba(255,255,255,0.06);
+    --success: #5ce0c6;
+    --warning: #fcb55c;
+    --danger: #fc5c7d;
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Sora', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* SPLASH */
+  #splash {
+    position: fixed; inset: 0; z-index: 1000;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 16px;
+    transition: opacity 0.5s;
+  }
+  #splash .logo-mark {
+    width: 72px; height: 72px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 22px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px; font-weight: 600; color: white;
+    box-shadow: 0 0 40px rgba(124,92,252,0.4);
+  }
+  #splash h1 { font-size: 28px; font-weight: 600; letter-spacing: -0.5px; }
+  #splash p { color: var(--text2); font-size: 14px; }
+  #splash.hidden { opacity: 0; pointer-events: none; }
+
+  /* APP SHELL */
+  #app { display: none; flex-direction: column; min-height: 100vh; }
+  #app.visible { display: flex; }
+
+  /* HEADER */
+  header {
+    padding: 20px 20px 0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .logo-sm {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 18px; font-weight: 600; letter-spacing: -0.3px;
+  }
+  .logo-dot {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; color: white;
+  }
+  .header-actions { display: flex; gap: 8px; }
+  .icon-btn {
+    width: 38px; height: 38px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--text2);
+    font-size: 18px; transition: all 0.2s;
+  }
+  .icon-btn:hover { background: var(--surface3); color: var(--text); }
+
+  /* TABS */
+  .tabs {
+    display: flex; gap: 4px;
+    padding: 16px 20px 0;
+  }
+  .tab {
+    flex: 1;
+    padding: 10px 0;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    text-align: center;
+    font-size: 12px; font-weight: 500;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tab.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+
+  /* CONTENT */
+  .content { flex: 1; padding: 16px 20px 100px; }
+
+  /* SECTION */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-bottom: 12px;
+  }
+  .card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .card-title { font-size: 15px; font-weight: 600; }
+  .card-subtitle { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+  /* STUDENT CARD */
+  .student-card {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .student-card::before {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: var(--accent);
+    border-radius: 3px 0 0 3px;
+  }
+  .student-card.due::before { background: var(--danger); }
+  .student-card.upcoming::before { background: var(--warning); }
+  .student-card:hover { background: var(--surface2); }
+  .student-card .s-header { display: flex; align-items: center; gap: 12px; }
+  .avatar {
+    width: 42px; height: 42px; border-radius: 13px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 600; color: white;
+    flex-shrink: 0;
+  }
+  .s-name { font-size: 15px; font-weight: 600; }
+  .s-meta { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 500;
+  }
+  .badge-due { background: rgba(252,92,125,0.15); color: var(--danger); }
+  .badge-upcoming { background: rgba(252,181,92,0.15); color: var(--warning); }
+  .badge-ok { background: rgba(92,224,198,0.12); color: var(--success); }
+  .s-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 12px; padding-top: 12px;
+    border-top: 1px solid var(--border2);
+  }
+  .amount-label { font-size: 11px; color: var(--text3); }
+  .amount-val { font-size: 18px; font-weight: 600; font-family: 'DM Mono', monospace; }
+
+  /* STAT ROW */
+  .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .stat-card {
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    text-align: center;
+  }
+  .stat-val { font-size: 22px; font-weight: 600; font-family: 'DM Mono', monospace; }
+  .stat-label { font-size: 11px; color: var(--text2); margin-top: 3px; }
+
+  /* ALERT BANNER */
+  .alert-banner {
+    background: rgba(252,92,125,0.1);
+    border: 1px solid rgba(252,92,125,0.25);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    display: flex; align-items: flex-start; gap: 12px;
+  }
+  .alert-banner .alert-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+  .alert-banner .alert-text { font-size: 13px; line-height: 1.5; }
+  .alert-banner .alert-text strong { color: var(--danger); display: block; margin-bottom: 2px; }
+
+  /* FORM */
+  .form-group { margin-bottom: 14px; }
+  label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 6px; font-weight: 500; }
+  input, select, textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'Sora', sans-serif;
+    font-size: 14px;
+    padding: 11px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+  }
+  select option { background: var(--surface2); }
+  textarea { resize: vertical; min-height: 80px; }
+
+  .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .custom-row {
+    display: none; margin-top: 8px;
+  }
+  .custom-row.visible { display: block; }
+
+  /* BUTTON */
+  .btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: var(--radius-sm);
+    font-size: 15px; font-weight: 600;
+    font-family: 'Sora', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), #9b7aff);
+    color: white;
+  }
+  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-outline {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text2);
+  }
+  .btn-danger {
+    background: rgba(252,92,125,0.15);
+    border: 1px solid rgba(252,92,125,0.3);
+    color: var(--danger);
+  }
+  .btn-success {
+    background: rgba(92,224,198,0.12);
+    border: 1px solid rgba(92,224,198,0.25);
+    color: var(--success);
+  }
+  .btn-whatsapp {
+    background: rgba(37,211,102,0.12);
+    border: 1px solid rgba(37,211,102,0.3);
+    color: #25d366;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn + .btn { margin-top: 8px; }
+  .btn-sm {
+    width: auto; padding: 8px 14px; font-size: 13px;
+  }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 500;
+    background: rgba(0,0,0,0.7);
+    display: flex; align-items: flex-end;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    width: 100%;
+    background: var(--surface);
+    border-radius: 24px 24px 0 0;
+    padding: 24px 20px 40px;
+    max-height: 90vh;
+    overflow-y: auto;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-handle {
+    width: 40px; height: 4px;
+    background: var(--border2); border-radius: 2px;
+    margin: 0 auto 20px;
+  }
+  .modal-title { font-size: 18px; font-weight: 600; margin-bottom: 20px; }
+
+  /* DETAIL VIEW */
+  .detail-section { margin-bottom: 20px; }
+  .detail-section h3 { font-size: 13px; color: var(--text3); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .detail-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border2);
+    font-size: 14px;
+  }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-key { color: var(--text2); }
+  .detail-val { font-weight: 500; text-align: right; }
+
+  /* TIMELINE */
+  .timeline { padding-left: 20px; position: relative; }
+  .timeline::before {
+    content: ''; position: absolute;
+    left: 7px; top: 8px; bottom: 8px; width: 2px;
+    background: var(--border2);
+  }
+  .timeline-item {
+    position: relative;
+    padding: 0 0 16px 20px;
+  }
+  .timeline-item::before {
+    content: ''; position: absolute;
+    left: -13px; top: 5px;
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg);
+  }
+  .timeline-item.past::before { background: var(--text3); }
+  .timeline-item.due-now::before { background: var(--danger); }
+  .timeline-item.upcoming-now::before { background: var(--warning); }
+  .tl-date { font-size: 12px; color: var(--text2); }
+  .tl-amount { font-size: 14px; font-weight: 600; font-family: 'DM Mono', monospace; margin-top: 2px; }
+  .tl-status { font-size: 11px; margin-top: 3px; }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center; padding: 50px 20px;
+    color: var(--text3);
+  }
+  .empty-state .e-icon { font-size: 48px; margin-bottom: 14px; }
+  .empty-state h3 { font-size: 16px; color: var(--text2); margin-bottom: 6px; }
+  .empty-state p { font-size: 13px; line-height: 1.6; }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-size: 13px; color: var(--text3);
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin-bottom: 12px; margin-top: 20px;
+  }
+  .section-title:first-child { margin-top: 0; }
+
+  /* NOTIFICATION DOT */
+  .notif-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--danger);
+    position: absolute; top: -3px; right: -3px;
+  }
+  .tab-icon-wrap { position: relative; display: inline-block; }
+
+  /* SETTINGS */
+  .setting-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border2);
+  }
+  .setting-label { font-size: 14px; }
+  .setting-desc { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+  /* TOGGLE */
+  .toggle {
+    width: 44px; height: 24px;
+    background: var(--surface3);
+    border-radius: 12px;
+    position: relative; cursor: pointer;
+    transition: background 0.2s;
+    flex-shrink: 0;
+    border: none;
+  }
+  .toggle.on { background: var(--accent); }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    width: 18px; height: 18px;
+    background: white; border-radius: 50%;
+    top: 3px; left: 3px;
+    transition: transform 0.2s;
+  }
+  .toggle.on::after { transform: translateX(20px); }
+
+  /* BOTTOM FAB */
+  .fab {
+    position: fixed;
+    bottom: 24px; right: 20px;
+    width: 56px; height: 56px;
+    background: linear-gradient(135deg, var(--accent), #9b7aff);
+    border-radius: 18px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; color: white;
+    box-shadow: 0 8px 24px rgba(124,92,252,0.4);
+    cursor: pointer; border: none;
+    transition: all 0.2s;
+    z-index: 200;
+  }
+  .fab:hover { transform: scale(1.05); }
+  .fab:active { transform: scale(0.97); }
+
+  /* NAV */
+  nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: rgba(26,26,46,0.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border2);
+    display: flex;
+    padding: 12px 0 env(safe-area-inset-bottom);
+    z-index: 100;
+  }
+  .nav-item {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; gap: 4px;
+    cursor: pointer; padding: 4px 0;
+    color: var(--text3);
+    transition: color 0.2s;
+    font-size: 10px;
+  }
+  .nav-item.active { color: var(--accent); }
+  .nav-item svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+
+  /* COLORS for avatars */
+  .color-0 { background: linear-gradient(135deg,#7c5cfc,#9b7aff); }
+  .color-1 { background: linear-gradient(135deg,#5ce0c6,#3dbfa8); }
+  .color-2 { background: linear-gradient(135deg,#fc5c7d,#ff8fab); }
+  .color-3 { background: linear-gradient(135deg,#fcb55c,#ffd280); }
+  .color-4 { background: linear-gradient(135deg,#5c9bfc,#7ab8ff); }
+  .color-5 { background: linear-gradient(135deg,#c45cfc,#e07aff); }
+  .color-6 { background: linear-gradient(135deg,#5ce07a,#7affa3); }
+  .color-7 { background: linear-gradient(135deg,#fc5c5c,#ff8080); }
+
+  /* PULSE ANIMATION */
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  .pulse { animation: pulse 2s infinite; }
+
+  /* GCAL BANNER */
+  .gcal-btn {
+    background: rgba(92,155,252,0.1);
+    border: 1px solid rgba(92,155,252,0.25);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    display: flex; align-items: center; gap: 12px;
+    cursor: pointer; width: 100%; text-align: left;
+    margin-bottom: 10px;
+  }
+  .gcal-btn .gcal-icon { font-size: 22px; flex-shrink: 0; }
+  .gcal-btn .gcal-text { font-size: 13px; }
+  .gcal-btn .gcal-text strong { display: block; color: #5c9bfc; margin-bottom: 2px; font-size: 14px; }
+
+  .divider { height: 1px; background: var(--border2); margin: 20px 0; }
+
+  .day-btn {
+    padding: 7px 12px; border-radius: 20px; font-size: 12px; font-weight: 500;
+    background: var(--surface2); border: 1px solid var(--border2);
+    color: var(--text2); cursor: pointer; transition: all 0.15s;
+    font-family: 'Sora', sans-serif;
+  }
+  .day-btn.selected {
+    background: var(--accent); border-color: var(--accent); color: white;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="logo-mark">T</div>
+  <h1>TuitionTrack</h1>
+  <p>Loading your dashboard...</p>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <header>
+    <div class="logo-sm">
+      <div class="logo-dot">T</div>
+      TuitionTrack
+    </div>
+    <div class="header-actions">
+      <div class="icon-btn" onclick="openSettings()" title="Settings">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </div>
+    </div>
+  </header>
+
+  <div class="content">
+    <!-- DASHBOARD -->
+    <div id="sec-dashboard" class="section active">
+      <div id="dashboard-content"></div>
+    </div>
+
+    <!-- STUDENTS -->
+    <div id="sec-students" class="section">
+      <div id="students-content"></div>
+    </div>
+
+    <!-- ALERTS -->
+    <div id="sec-alerts" class="section">
+      <div id="alerts-content"></div>
+    </div>
+
+    <!-- MESSAGE TEMPLATE -->
+    <div id="sec-message" class="section">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">💬 Auto Message</div>
+            <div class="card-subtitle">Used for all students — name & amount fill in automatically</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Message Template</label>
+          <textarea id="msg-template" rows="7" oninput="updateMsgPreview()" placeholder="Type your message here..."></textarea>
+        </div>
+        <div style="margin-bottom:14px;">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">Tap to insert placeholder</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            <button onclick="insertPlaceholder('{name}')" style="background:rgba(124,92,252,0.15);border:1px solid rgba(124,92,252,0.3);color:#a78bfa;padding:5px 12px;border-radius:20px;font-size:12px;cursor:pointer;">{name}</button>
+            <button onclick="insertPlaceholder('{amount}')" style="background:rgba(92,224,198,0.12);border:1px solid rgba(92,224,198,0.25);color:#5ce0c6;padding:5px 12px;border-radius:20px;font-size:12px;cursor:pointer;">{amount}</button>
+            <button onclick="insertPlaceholder('{date}')" style="background:rgba(252,181,92,0.12);border:1px solid rgba(252,181,92,0.25);color:#fcb55c;padding:5px 12px;border-radius:20px;font-size:12px;cursor:pointer;">{date}</button>
+            <button onclick="insertPlaceholder('{lessons}')" style="background:rgba(92,155,252,0.1);border:1px solid rgba(92,155,252,0.25);color:#5c9bfc;padding:5px 12px;border-radius:20px;font-size:12px;cursor:pointer;">{lessons}</button>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="saveTemplate()">Save Template</button>
+        <button class="btn btn-outline" style="margin-top:8px" onclick="resetTemplate()">Reset to Default</button>
+      </div>
+
+      <div class="card" id="msg-preview-card" style="display:none">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Preview</div>
+            <div class="card-subtitle" id="msg-preview-student-name">—</div>
+          </div>
+          <select id="msg-preview-select" style="width:auto;font-size:12px;padding:6px 10px" onchange="updateMsgPreview()">
+          </select>
+        </div>
+        <div id="msg-preview-box" style="background:var(--surface2);border-radius:var(--radius-sm);padding:14px;font-size:13px;line-height:1.7;color:var(--text2);white-space:pre-wrap;word-break:break-word;min-height:60px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav>
+    <div class="nav-item active" id="nav-dashboard" onclick="switchTab('dashboard')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-item" id="nav-students" onclick="switchTab('students')">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Students
+    </div>
+    <div class="nav-item" id="nav-alerts" onclick="switchTab('alerts')" style="position:relative">
+      <div class="tab-icon-wrap">
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <div class="notif-dot" id="notif-badge" style="display:none"></div>
+      </div>
+      Alerts
+    </div>
+    <div class="nav-item" id="nav-message" onclick="switchTab('message')">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Message
+    </div>
+  </nav>
+
+  <!-- FAB -->
+  <button class="fab" onclick="openAddStudent()">+</button>
+</div>
+
+<!-- ADD/EDIT STUDENT MODAL -->
+<div class="modal-overlay" id="modal-add">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-add-title">Add Student</div>
+    <div class="form-group">
+      <label>Student Name *</label>
+      <input type="text" id="f-name" placeholder="e.g. Emma Wong">
+    </div>
+    <div class="form-group">
+      <label>Parent / Guardian WhatsApp Number</label>
+      <input type="tel" id="f-phone" placeholder="e.g. 85291234567 (with country code)">
+    </div>
+    <div class="form-group">
+      <label>First Lesson Date *</label>
+      <input type="date" id="f-startdate">
+    </div>
+    <div class="form-group">
+      <label>Lesson Frequency</label>
+      <select id="f-freq" onchange="onFreqChange()">
+        <option value="weekly">Weekly (once a week)</option>
+        <option value="biweekly">Biweekly (once every 2 weeks)</option>
+        <option value="twice">Twice a week</option>
+        <option value="thrice">Three times a week</option>
+        <option value="daily">Daily (Mon–Fri)</option>
+        <option value="custom">Custom (specify days per week)</option>
+      </select>
+      <div class="custom-row" id="custom-freq-row" style="margin-top:8px">
+        <label style="margin-bottom:4px">How many lessons per week?</label>
+        <input type="number" id="f-customfreq" placeholder="e.g. 4" min="1" max="7" oninput="onFreqChange()">
+      </div>
+      <div id="day-picker-row" style="display:none;margin-top:10px">
+        <label style="margin-bottom:6px">Which days? <span id="day-count-hint" style="color:var(--text3);font-weight:400"></span></label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap" id="day-picker">
+          <button type="button" class="day-btn" data-day="1" onclick="toggleDay(1)">Mon</button>
+          <button type="button" class="day-btn" data-day="2" onclick="toggleDay(2)">Tue</button>
+          <button type="button" class="day-btn" data-day="3" onclick="toggleDay(3)">Wed</button>
+          <button type="button" class="day-btn" data-day="4" onclick="toggleDay(4)">Thu</button>
+          <button type="button" class="day-btn" data-day="5" onclick="toggleDay(5)">Fri</button>
+          <button type="button" class="day-btn" data-day="6" onclick="toggleDay(6)">Sat</button>
+          <button type="button" class="day-btn" data-day="0" onclick="toggleDay(0)">Sun</button>
+        </div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Fee per Lesson (HKD)</label>
+      <input type="number" id="f-fee" placeholder="e.g. 80" min="0" step="0.01">
+    </div>
+    <div class="form-group">
+      <label>Collection Period</label>
+      <select id="f-collect" onchange="onCollectChange()">
+        <option value="weekly">Weekly</option>
+        <option value="biweekly">Every 2 Weeks</option>
+        <option value="monthly" selected>Monthly</option>
+        <option value="custom">Custom (specify days)</option>
+      </select>
+      <div class="custom-row" id="custom-collect-row">
+        <input type="number" id="f-customcollect" placeholder="e.g. 45 (collect every N days)" min="1" max="365">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Notes (optional)</label>
+      <input type="text" id="f-notes" placeholder="e.g. Online lessons, Wednesday 3pm">
+    </div>
+    <input type="hidden" id="f-edit-id">
+    <button class="btn btn-primary" onclick="saveStudent()">Save Student</button>
+    <button class="btn btn-outline" style="margin-top:8px" onclick="closeModal('modal-add')">Cancel</button>
+  </div>
+</div>
+
+<!-- STUDENT DETAIL MODAL -->
+<div class="modal-overlay" id="modal-detail">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div id="modal-detail-content"></div>
+    <button class="btn btn-outline" style="margin-top:8px" onclick="closeModal('modal-detail')">Close</button>
+  </div>
+</div>
+
+<!-- CANCEL / RESCHEDULE LESSON MODAL -->
+<div class="modal-overlay" id="modal-cancel">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-cancel-title">Cancel / Reschedule Lesson</div>
+    <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:16px;font-size:14px;line-height:1.6" id="cancel-lesson-info"></div>
+    <div class="form-group">
+      <label>What happened to this lesson?</label>
+      <select id="cancel-type" onchange="onCancelTypeChange()">
+        <option value="rescheduled">Rescheduled — moved to a new date</option>
+        <option value="cancelled">Cancelled — not happening, deduct from payment</option>
+      </select>
+    </div>
+    <div id="reschedule-date-row" class="form-group">
+      <label>New Lesson Date</label>
+      <input type="date" id="cancel-new-date" onchange="updateCancelImpact()">
+    </div>
+    <div id="cancel-payment-impact" style="display:none;background:var(--surface2);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:16px;font-size:13px;line-height:1.6;color:var(--text2)"></div>
+    <input type="hidden" id="cancel-student-id">
+    <input type="hidden" id="cancel-lesson-date">
+    <button class="btn btn-primary" onclick="confirmCancelLesson()">Confirm</button>
+    <button class="btn btn-outline" style="margin-top:8px" onclick="closeModal('modal-cancel')">Go Back</button>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="modal-settings">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Settings</div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Notifications</div>
+        <div class="setting-desc">iPhone: install to home screen first</div>
+      </div>
+      <button class="toggle" id="toggle-notif" onclick="toggleNotif()"></button>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Days Before Alert</div>
+        <div class="setting-desc">Alert how many days before collection date</div>
+      </div>
+      <select id="days-before" style="width:80px" onchange="saveSetting('daysBefore', this.value)">
+        <option value="0">Same day</option>
+        <option value="1" selected>1 day</option>
+        <option value="2">2 days</option>
+        <option value="3">3 days</option>
+        <option value="7">1 week</option>
+      </select>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Currency Symbol</div>
+      </div>
+      <select id="currency-sym" style="width:80px" onchange="saveSetting('currency', this.value)">
+        <option value="HKD">HKD</option>
+        <option value="RM">RM</option>
+        <option value="$">$</option>
+        <option value="£">£</option>
+        <option value="€">€</option>
+        <option value="¥">¥</option>
+        <option value="₩">₩</option>
+        <option value="SGD">SGD</option>
+      </select>
+    </div>
+    <div class="divider"></div>
+    <div class="modal-title" style="font-size:15px;margin-bottom:12px;">Google Calendar</div>
+    <button class="gcal-btn" onclick="openGoogleCalendar()">
+      <div class="gcal-icon">📅</div>
+      <div class="gcal-text">
+        <strong>Add to Google Calendar</strong>
+        Tap a student's "Add to Calendar" button to export their payment schedule as calendar events
+      </div>
+    </button>
+    <div style="font-size:12px;color:var(--text3);line-height:1.6;margin-top:4px;">
+      Each payment date is created as a Google Calendar event with the student's name and amount. Works on any phone or browser with your Google account.
+    </div>
+    <div class="divider"></div>
+    <button class="btn btn-danger" onclick="exportData()">📤 Export Data (JSON)</button>
+    <button class="btn btn-outline" style="margin-top:8px" onclick="importData()">📥 Import Data</button>
+    <input type="file" id="import-file" accept=".json" style="display:none" onchange="doImport(event)">
+    <div class="divider"></div>
+    <button class="btn btn-outline" onclick="closeModal('modal-settings')">Close</button>
+  </div>
+</div>
+
+<!-- CANCEL / RESCHEDULE LESSON MODAL -->
+<div class="modal-overlay" id="modal-cancel">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-cancel-title">Cancel Lesson</div>
+    <input type="hidden" id="cancel-student-id">
+    <input type="hidden" id="cancel-lesson-date">
+    <div id="cancel-lesson-info" style="background:var(--surface2);border-radius:var(--radius-sm);padding:12px;margin-bottom:16px;font-size:13px;color:var(--text2);"></div>
+    <div class="form-group">
+      <label>What happened to this lesson?</label>
+      <select id="cancel-type" onchange="onCancelTypeChange()">
+        <option value="cancelled">Cancelled (no makeup — deduct from payment)</option>
+        <option value="rescheduled">Rescheduled — moved to a new date</option>
+      </select>
+    </div>
+    <div class="form-group" id="reschedule-date-row">
+      <label>New Lesson Date</label>
+      <input type="date" id="cancel-new-date" onchange="updateCancelImpact()">
+    </div>
+    <div id="cancel-payment-impact" style="background:rgba(252,181,92,0.08);border:1px solid rgba(252,181,92,0.2);border-radius:var(--radius-sm);padding:12px;margin-bottom:16px;font-size:13px;line-height:1.6;display:none;"></div>
+    <button class="btn btn-primary" onclick="confirmCancelLesson()">Confirm</button>
+    <button class="btn btn-outline" style="margin-top:8px" onclick="closeModal('modal-cancel')">Cancel</button>
+  </div>
+</div>
+
+<script>
+// ===================== DATA =====================
+let students = [];
+let settings = {
+  notifications: false,
+  daysBefore: 1,
+  currency: 'HKD'
+};
+let msgTemplate = "Hi {name}'s parent! 👋\n\nThis is a friendly reminder that {amount} is due for tuition lessons.\n\nCollection period: {date}\nLessons this period: {lessons}\n\nPlease arrange payment at your earliest convenience. Thank you! 🙏";
+
+const FREQ_DAYS = { weekly: 7, biweekly: 14, twice: 3.5, thrice: 2.33, daily: 1 };
+const COLLECT_DAYS = { weekly: 7, biweekly: 14, monthly: 30 };
+const FREQ_LABELS = { weekly: 'Once a week', biweekly: 'Every 2 weeks', twice: 'Twice a week', thrice: '3×/week', daily: 'Daily (Mon–Fri)', custom: 'Custom' };
+const COLLECT_LABELS = { weekly: 'Weekly', biweekly: 'Every 2 weeks', monthly: 'Monthly' };
+const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+function load() {
+  try {
+    const s = localStorage.getItem('tt_students');
+    if (s) students = JSON.parse(s);
+    const st = localStorage.getItem('tt_settings');
+    if (st) settings = { ...settings, ...JSON.parse(st) };
+    const mt = localStorage.getItem('tt_msgtemplate');
+    if (mt) msgTemplate = mt;
+  } catch(e) {}
+}
+
+function save() {
+  localStorage.setItem('tt_students', JSON.stringify(students));
+}
+
+function saveSetting(key, val) {
+  settings[key] = val;
+  localStorage.setItem('tt_settings', JSON.stringify(settings));
+}
+
+function saveTemplate() {
+  msgTemplate = document.getElementById('msg-template').value;
+  localStorage.setItem('tt_msgtemplate', msgTemplate);
+  showToast('Template saved! \u2713');
+}
+
+function resetTemplate() {
+  if (!confirm('Reset to the default message template?')) return;
+  msgTemplate = "Hi {name}'s parent! \uD83D\uDC4B\n\nThis is a friendly reminder that {amount} is due for tuition lessons.\n\nCollection date: {date}\nLessons this period: {lessons}\n\nPlease arrange payment at your earliest convenience. Thank you! \uD83D\uDE4F";
+  document.getElementById('msg-template').value = msgTemplate;
+  localStorage.setItem('tt_msgtemplate', msgTemplate);
+  updateMsgPreview();
+  showToast('Template reset \u2713');
+}
+
+function insertPlaceholder(tag) {
+  const ta = document.getElementById('msg-template');
+  const start = ta.selectionStart, end = ta.selectionEnd;
+  ta.value = ta.value.slice(0, start) + tag + ta.value.slice(end);
+  ta.selectionStart = ta.selectionEnd = start + tag.length;
+  ta.focus();
+  updateMsgPreview();
+}
+
+function updateMsgPreview() {
+  const card = document.getElementById('msg-preview-card');
+  const sel = document.getElementById('msg-preview-select');
+  if (!students.length) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  const currentIds = Array.from(sel.options).map(o => o.value);
+  const studentIds = students.map(s => s.id);
+  if (JSON.stringify(currentIds) !== JSON.stringify(studentIds)) {
+    sel.innerHTML = students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+  }
+  const id = sel.value;
+  const s = students.find(st => st.id === id);
+  if (!s) return;
+  const cur = settings.currency || 'HKD';
+  const next = getNextPaymentDate(s);
+  const amt = getNextPeriodAmount(s);
+  const lessons = getLessonsPerPeriod(s);
+  const tmpl = document.getElementById('msg-template').value || msgTemplate;
+  let msg = tmpl
+    .replaceAll('{name}', s.name)
+    .replaceAll('{amount}', `${cur} ${amt.toFixed(2)}`)
+    .replaceAll('{date}', next ? formatDate(next) : 'soon')
+    .replaceAll('{lessons}', `${lessons} lessons`);
+  document.getElementById('msg-preview-box').textContent = msg;
+  document.getElementById('msg-preview-student-name').textContent = `Preview for: ${s.name}`;
+}
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+// ===================== LESSON ENGINE =====================
+// Returns every lesson date from startDate up to horizonDate
+function getLessonDates(s, horizonDate) {
+  const start = new Date(s.startDate); start.setHours(0,0,0,0);
+  const horizon = new Date(horizonDate); horizon.setHours(23,59,59,0);
+  const days = s.lessonDays && s.lessonDays.length ? s.lessonDays.map(Number) : null;
+  const overrides = s.lessonOverrides || {};  // { 'YYYY-MM-DD': { status, reschedTo? } }
+  const results  = [];
+
+  if (days) {
+    // Day-of-week scheduling
+    let cur = new Date(start);
+    while (!days.includes(cur.getDay())) { cur.setDate(cur.getDate() + 1); }
+    while (cur <= horizon) {
+      const key = toKey(cur);
+      const ov = overrides[key];
+      if (ov && ov.status === 'cancelled') {
+        results.push({ date: new Date(cur), type: 'cancelled', key });
+      } else if (ov && ov.status === 'rescheduled') {
+        results.push({ date: new Date(cur), type: 'rescheduled', reschedTo: ov.reschedTo, key });
+        if (ov.reschedTo) {
+          const rd = fromKey(ov.reschedTo);
+          if (rd <= horizon) results.push({ date: rd, type: 'makeup', original: key, key: ov.reschedTo });
+        }
+      } else {
+        results.push({ date: new Date(cur), type: 'regular', key });
+      }
+      cur.setDate(cur.getDate() + 1);
+      while (!days.includes(cur.getDay())) { cur.setDate(cur.getDate() + 1); }
+    }
+  } else {
+    // Interval-based scheduling
+    const freqDays = getFreqDaysRaw(s);
+    let cur = new Date(start);
+    while (cur <= horizon) {
+      const key = toKey(cur);
+      const ov = overrides[key];
+      if (ov && ov.status === 'cancelled') {
+        results.push({ date: new Date(cur), type: 'cancelled', key });
+      } else if (ov && ov.status === 'rescheduled') {
+        results.push({ date: new Date(cur), type: 'rescheduled', reschedTo: ov.reschedTo, key });
+        if (ov.reschedTo) {
+          const rd = fromKey(ov.reschedTo);
+          if (rd <= horizon) results.push({ date: rd, type: 'makeup', original: key, key: ov.reschedTo });
+        }
+      } else {
+        results.push({ date: new Date(cur), type: 'regular', key });
+      }
+      cur.setDate(cur.getDate() + Math.round(freqDays));
+    }
+  }
+
+  results.sort((a, b) => a.date - b.date);
+  return results;
+}
+
+function toKey(d) {
+  return d.toISOString().slice(0, 10);
+}
+function fromKey(k) {
+  const d = new Date(k + 'T00:00:00');
+  return d;
+}
+
+function getFreqDaysRaw(s) {
+  if (s.freq === 'custom') return 7 / (parseFloat(s.customFreq) || 1);
+  return FREQ_DAYS[s.freq] || 7;
+}
+
+function getCollectDays(s) {
+  if (s.collect === 'custom') return parseInt(s.customCollect) || 30;
+  return COLLECT_DAYS[s.collect] || 30;
+}
+
+// Payment dates: every N days from startDate into the future
+function getPaymentDates(s, count = 12) {
+  const start = new Date(s.startDate);
+  const cdays = getCollectDays(s);
+  const dates = [];
+  for (let i = 1; i <= count; i++) {
+    const d = new Date(start);
+    d.setDate(d.getDate() + cdays * i);
+    dates.push(d);
+  }
+  return dates;
+}
+
+function getNextPaymentDate(s) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const dates = getPaymentDates(s, 60);
+  for (const d of dates) { if (d >= today) return d; }
+  return null;
+}
+
+// Count lessons & compute amount for the upcoming payment period
+function getNextPeriodInfo(s) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const next = getNextPaymentDate(s);
+  if (!next) return { count: 0, amount: 0 };
+  const cdays = getCollectDays(s);
+  const periodStart = new Date(next);
+  periodStart.setDate(periodStart.getDate() - cdays);
+  const horizon = new Date(next); horizon.setDate(horizon.getDate() + 60);
+  const allLessons = getLessonDates(s, horizon);
+  // Payable = regular + makeup that fall within this period; cancelled/rescheduled originals don't count
+  const lessons = allLessons.filter(l =>
+    (l.type === 'regular' || l.type === 'makeup') &&
+    l.date > periodStart && l.date <= next
+  );
+  const count = lessons.length;
+  const amount = Math.round(count * (parseFloat(s.fee) || 0) * 100) / 100;
+  return { count, amount, lessons };
+}
+
+// Legacy helpers kept for compatibility
+function getLessonsPerPeriod(s) { return getNextPeriodInfo(s).count; }
+function getAmountPerPeriod(s) { return getNextPeriodInfo(s).amount; }
+
+function getDaysUntil(d) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const target = new Date(d); target.setHours(0,0,0,0);
+  return Math.round((target - today) / 86400000);
+}
+
+function getStatus(s) {
+  const next = getNextPaymentDate(s);
+  if (!next) return { label: 'Completed', cls: 'ok' };
+  const days = getDaysUntil(next);
+  const threshold = parseInt(settings.daysBefore) || 1;
+  if (days < 0) return { label: 'Overdue', cls: 'due' };
+  if (days === 0) return { label: 'Due Today!', cls: 'due' };
+  if (days <= threshold) return { label: `Due in ${days}d`, cls: 'upcoming' };
+  return { label: `Due in ${days}d`, cls: 'ok' };
+}
+
+function formatDate(d) {
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+function formatShort(d) {
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+}
+function avatarInitials(name) {
+  return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+}
+function avatarColor(id) {
+  const h = id.charCodeAt(0) + (id.charCodeAt(1) || 0);
+  return `color-${h % 8}`;
+}
+function getDaysLabel(d) {
+  return DAY_NAMES[d];
+}
+
+// ===================== ALERTS =====================
+function getDueStudents() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const threshold = parseInt(settings.daysBefore) || 1;
+  return students.filter(s => {
+    const next = getNextPaymentDate(s);
+    if (!next) return false;
+    const days = getDaysUntil(next);
+    return days <= threshold;
+  });
+}
+
+// ===================== RENDER =====================
+function renderDashboard() {
+  const dueList = getDueStudents();
+  const total = students.reduce((a, s) => a + getAmountPerPeriod(s), 0);
+  const totalStudents = students.length;
+  const cur = settings.currency || 'RM';
+  let html = '';
+
+  // Stats
+  html += `<div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-val" style="color:var(--accent)">${totalStudents}</div>
+      <div class="stat-label">Active Students</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" style="color:var(--accent2)">${cur} ${total.toFixed(0)}</div>
+      <div class="stat-label">Per Period (est.)</div>
+    </div>
+  </div>`;
+
+  // Due alerts
+  if (dueList.length > 0) {
+    html += `<div class="section-title">⚡ Action Required</div>`;
+    dueList.forEach(s => {
+      const next = getNextPaymentDate(s);
+      const days = getDaysUntil(next);
+      const amt = getAmountPerPeriod(s);
+      const daysLabel = days < 0 ? `${Math.abs(days)} day${Math.abs(days)===1?'':'s'} overdue` : days === 0 ? 'today' : `in ${days} day${days===1?'':'s'}`;
+      html += `<div class="alert-banner">
+        <div class="alert-icon">🔔</div>
+        <div class="alert-text">
+          <strong>${s.name}</strong>
+          ${cur} ${amt.toFixed(2)} due ${daysLabel} &nbsp;·&nbsp; ${formatDate(next)}
+          ${s.phone ? `<br><button class="btn btn-whatsapp btn-sm" style="margin-top:8px" onclick="sendWhatsApp('${s.id}')">💬 Send WhatsApp</button>` : ''}
+        </div>
+      </div>`;
+    });
+  }
+
+  // Upcoming payments (next 30 days)
+  html += `<div class="section-title">📅 Upcoming Payments</div>`;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const in30 = new Date(today); in30.setDate(in30.getDate() + 30);
+  const upcoming = [];
+  students.forEach(s => {
+    const dates = getPaymentDates(s, 30);
+    dates.forEach(d => {
+      if (d >= today && d <= in30) upcoming.push({ s, d });
+    });
+  });
+  upcoming.sort((a,b) => a.d - b.d);
+
+  if (upcoming.length === 0) {
+    html += `<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">No payments in the next 30 days</div>`;
+  } else {
+    upcoming.slice(0, 8).forEach(({ s, d }) => {
+      const days = getDaysUntil(d);
+      const amt = getAmountPerPeriod(s);
+      const daysLabel = days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days} days`;
+      html += `<div class="student-card" onclick="openDetail('${s.id}')">
+        <div class="s-header">
+          <div class="avatar ${avatarColor(s.id)}">${avatarInitials(s.name)}</div>
+          <div style="flex:1">
+            <div class="s-name">${s.name}</div>
+            <div class="s-meta">${formatDate(d)}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:16px;font-weight:600;font-family:'DM Mono',monospace;">${cur} ${amt.toFixed(2)}</div>
+            <div style="font-size:11px;color:${days<=1?'var(--danger)':days<=3?'var(--warning)':'var(--text2)'};">${daysLabel}</div>
+          </div>
+        </div>
+      </div>`;
+    });
+  }
+
+  document.getElementById('dashboard-content').innerHTML = html;
+}
+
+function renderStudents() {
+  let html = '';
+  if (students.length === 0) {
+    html = `<div class="empty-state">
+      <div class="e-icon">👨‍🎓</div>
+      <h3>No students yet</h3>
+      <p>Tap the + button to add your first student and start tracking tuition payments.</p>
+    </div>`;
+  } else {
+    const cur = settings.currency || 'RM';
+    html += `<div class="section-title">${students.length} Student${students.length!==1?'s':''}</div>`;
+    students.forEach(s => {
+      const next = getNextPaymentDate(s);
+      const status = getStatus(s);
+      const amt = getAmountPerPeriod(s);
+      html += `<div class="student-card ${status.cls}" onclick="openDetail('${s.id}')">
+        <div class="s-header">
+          <div class="avatar ${avatarColor(s.id)}">${avatarInitials(s.name)}</div>
+          <div style="flex:1">
+            <div class="s-name">${s.name}</div>
+            <div class="s-meta">${getFreqLabel(s)} &nbsp;·&nbsp; ${getCollectLabel(s)}</div>
+          </div>
+          <span class="badge badge-${status.cls}">${status.label}</span>
+        </div>
+        <div class="s-footer">
+          <div>
+            <div class="amount-label">Per period</div>
+            <div class="amount-val" style="color:var(--accent)">${cur} ${amt.toFixed(2)}</div>
+          </div>
+          <div style="text-align:right">
+            <div class="amount-label">Next due</div>
+            <div style="font-size:13px;font-weight:500;margin-top:2px;">${next ? formatShort(next) : '—'}</div>
+          </div>
+        </div>
+      </div>`;
+    });
+  }
+  document.getElementById('students-content').innerHTML = html;
+}
+
+function renderAlerts() {
+  const dueList = getDueStudents();
+  const cur = settings.currency || 'HKD';
+  let html = '';
+
+  if (dueList.length === 0) {
+    html = `<div class="empty-state">
+      <div class="e-icon">✅</div>
+      <h3>All clear!</h3>
+      <p>No payments are due right now. Check back later.</p>
+    </div>`;
+  } else {
+    html += `<div class="section-title">${dueList.length} Payment${dueList.length!==1?'s':''} Due</div>`;
+    dueList.forEach(s => {
+      const next = getNextPaymentDate(s);
+      const days = getDaysUntil(next);
+      const amt = getAmountPerPeriod(s);
+      const lessons = getLessonsPerPeriod(s);
+      const daysLabel = days < 0 ? `${Math.abs(days)} day${Math.abs(days)===1?'':'s'} overdue` : days === 0 ? 'Due Today!' : `Due in ${days} day${days===1?'':'s'}`;
+      html += `<div class="card">
+        <div class="s-header" style="margin-bottom:14px">
+          <div class="avatar ${avatarColor(s.id)}">${avatarInitials(s.name)}</div>
+          <div style="flex:1">
+            <div class="s-name">${s.name}</div>
+            <div class="s-meta">${daysLabel}</div>
+          </div>
+          <span class="badge badge-${days<=0?'due':'upcoming'}" style="flex-shrink:0">${days<=0?'🔴':'🟡'}</span>
+        </div>
+        <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:12px;margin-bottom:12px">
+          <div class="detail-row">
+            <span class="detail-key">Amount Due</span>
+            <span class="detail-val" style="color:var(--accent);font-size:18px;font-family:'DM Mono',monospace">${cur} ${amt.toFixed(2)}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-key">Due Date</span>
+            <span class="detail-val">${next ? formatDate(next) : '—'}</span>
+          </div>
+          <div class="detail-row" style="border:none">
+            <span class="detail-key">Lessons (est.)</span>
+            <span class="detail-val">${lessons} lessons</span>
+          </div>
+        </div>
+        ${s.phone ? `<button class="btn btn-whatsapp" onclick="sendWhatsApp('${s.id}')">💬 Send WhatsApp Reminder</button>` : '<div style="font-size:12px;color:var(--text3);text-align:center">No phone number — add one in student details</div>'}
+        <button class="btn btn-success" style="margin-top:8px" onclick="markPaid('${s.id}')">✓ Mark as Paid</button>
+      </div>`;
+    });
+  }
+
+  // Update badge
+  document.getElementById('notif-badge').style.display = dueList.length > 0 ? 'block' : 'none';
+  document.getElementById('alerts-content').innerHTML = html;
+}
+
+function getFreqLabel(s) {
+  if (s.freq === 'custom') return `${s.customFreq || '?'}×/week`;
+  return FREQ_LABELS[s.freq] || s.freq;
+}
+function getCollectLabel(s) {
+  if (s.collect === 'custom') return `Every ${s.customCollect} days`;
+  return COLLECT_LABELS[s.collect] || s.collect;
+}
+
+// ===================== DETAIL MODAL =====================
+function openDetail(id) {
+  const s = students.find(st => st.id === id);
+  if (!s) return;
+  const cur = settings.currency || 'HKD';
+  const next = getNextPaymentDate(s);
+  const { count: lessons, amount: amt } = getNextPeriodInfo(s);
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  // Payment timeline — build 5 upcoming periods
+  const payDates = getPaymentDates(s, 5);
+  const cdays = getCollectDays(s);
+  let tlHtml = payDates.map(dueDate => {
+    const days = getDaysUntil(dueDate);
+    const periodStart = new Date(dueDate); periodStart.setDate(periodStart.getDate() - cdays);
+    const horizon2 = new Date(dueDate); horizon2.setDate(horizon2.getDate()+60);
+    const periodLessons = getLessonDates(s, horizon2).filter(l =>
+      (l.type === 'regular' || l.type === 'makeup') && l.date > periodStart && l.date <= dueDate
+    );
+    const n = periodLessons.length;
+    const periodAmt = Math.round(n * parseFloat(s.fee||0) * 100) / 100;
+    let cls = 'upcoming-now', status = days === 0 ? 'Today!' : `In ${days}d`;
+    if (days < 0) { cls = 'past'; status = 'Past'; }
+    if (days === 0) cls = 'due-now';
+    return `<div class="timeline-item ${cls}">
+      <div class="tl-date">${formatDate(dueDate)}</div>
+      <div class="tl-amount">${cur} ${periodAmt.toFixed(2)} <span style="font-size:11px;font-weight:400;color:var(--text3)">(${n} lesson${n!==1?'s':''})</span></div>
+      <div class="tl-status" style="color:${days<0?'var(--text3)':days===0?'var(--danger)':'var(--text2)'}">${status}</div>
+    </div>`;
+  }).join('');
+
+  // Lesson list — show past 14 days + next 45 days
+  const listFrom = new Date(today); listFrom.setDate(listFrom.getDate() - 14);
+  const listTo   = new Date(today); listTo.setDate(listTo.getDate() + 45);
+  // Build lesson list using the engine (includes makeups, cancellations)
+  const combined = getLessonDates(s, listTo)
+    .filter(l => l.date >= listFrom)
+    .map(l => ({
+      date: l.date,
+      key: l.key || toKey(l.date),
+      status: l.type, // 'regular','cancelled','rescheduled','makeup'
+      reschedTo: l.reschedTo ? fromKey(l.reschedTo) : null,
+      originalKey: l.original || null
+    }));
+
+  let lessonHtml = '';
+  if (combined.length === 0) {
+    lessonHtml = '<div style="font-size:13px;color:var(--text3);padding:8px 0">No lessons in range</div>';
+  } else {
+    lessonHtml = combined.map(l => {
+      const isPast = l.date < today;
+      const dayLabel = `${DAY_NAMES[l.date.getDay()]}, ${formatDate(l.date)}`;
+      let dotColor = isPast ? 'var(--text3)' : 'var(--accent)';
+      let subText = '', actions = '', labelStyle = '';
+
+      if (l.status === 'cancelled') {
+        dotColor = 'var(--danger)';
+        subText = '<span style="color:var(--danger);font-size:11px">Cancelled — not counted in payment</span>';
+        actions = `<button onclick="undoCancelLesson('${id}','${l.key}')" style="background:rgba(92,224,198,0.1);border:1px solid rgba(92,224,198,0.2);color:var(--success);padding:4px 10px;border-radius:16px;font-size:11px;cursor:pointer;white-space:nowrap">Undo</button>`;
+        labelStyle = 'text-decoration:line-through;opacity:0.5';
+      } else if (l.status === 'rescheduled') {
+        dotColor = 'var(--warning)';
+        subText = `<span style="color:var(--warning);font-size:11px">Moved \u2192 ${l.reschedTo ? formatShort(l.reschedTo) : '?'}</span>`;
+        actions = `<button onclick="undoCancelLesson('${id}','${l.key}')" style="background:rgba(92,224,198,0.1);border:1px solid rgba(92,224,198,0.2);color:var(--success);padding:4px 10px;border-radius:16px;font-size:11px;cursor:pointer;white-space:nowrap">Undo</button>`;
+        labelStyle = 'text-decoration:line-through;opacity:0.5';
+      } else if (l.status === 'makeup') {
+        dotColor = 'var(--accent2)';
+        const origDate = l.originalKey ? formatShort(fromKey(l.originalKey)) : '';
+        subText = `<span style="color:var(--accent2);font-size:11px">Makeup${origDate ? ' for ' + origDate : ''}</span>`;
+      } else if (!isPast) {
+        actions = `<button onclick="openCancelLesson('${id}','${l.key}')" style="background:rgba(252,92,125,0.1);border:1px solid rgba(252,92,125,0.2);color:var(--danger);padding:4px 10px;border-radius:16px;font-size:11px;cursor:pointer;white-space:nowrap">Cancel</button>`;
+      }
+
+      return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border2)">
+        <div style="width:10px;height:10px;border-radius:50%;background:${dotColor};flex-shrink:0"></div>
+        <div style="flex:1;min-width:0">
+          <div style="${labelStyle};font-size:13px;font-weight:500">${dayLabel}</div>
+          ${subText}
+        </div>
+        <div>${actions}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Lesson days label
+  const DAY_FULL_LOCAL = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  let daysLabel = '';
+  if (s.lessonDays && s.lessonDays.length > 0) {
+    daysLabel = s.lessonDays.map(d => DAY_FULL_LOCAL[d]).join(', ');
+  }
+
+  const html = `
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+      <div class="avatar ${avatarColor(s.id)}" style="width:54px;height:54px;border-radius:16px;font-size:20px">${avatarInitials(s.name)}</div>
+      <div>
+        <div style="font-size:20px;font-weight:600">${s.name}</div>
+        ${s.notes ? `<div style="font-size:13px;color:var(--text2);margin-top:2px">${s.notes}</div>` : ''}
+      </div>
+    </div>
+    <div class="stats-row" style="margin-bottom:18px">
+      <div class="stat-card">
+        <div class="stat-val" style="color:var(--accent)">${cur} ${amt.toFixed(2)}</div>
+        <div class="stat-label">Next due amount</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val">${lessons}</div>
+        <div class="stat-label">Lessons this period</div>
+      </div>
+    </div>
+    <div class="detail-section">
+      <h3>Lesson Details</h3>
+      <div class="detail-row"><span class="detail-key">First Lesson</span><span class="detail-val">${formatDate(new Date(s.startDate))}</span></div>
+      <div class="detail-row"><span class="detail-key">Frequency</span><span class="detail-val">${getFreqLabel(s)}</span></div>
+      ${daysLabel ? `<div class="detail-row"><span class="detail-key">Lesson Days</span><span class="detail-val">${daysLabel}</span></div>` : ''}
+      <div class="detail-row"><span class="detail-key">Fee per Lesson</span><span class="detail-val">${cur} ${parseFloat(s.fee||0).toFixed(2)}</span></div>
+      <div class="detail-row"><span class="detail-key">Collection</span><span class="detail-val">${getCollectLabel(s)}</span></div>
+      ${s.phone ? `<div class="detail-row"><span class="detail-key">Phone</span><span class="detail-val" style="color:var(--accent2)">${s.phone}</span></div>` : ''}
+    </div>
+    <div class="detail-section">
+      <h3>Lessons (past 2 weeks + next 6 weeks)</h3>
+      <div style="margin-bottom:8px;font-size:11px;color:var(--text3)">Tap Cancel on any upcoming lesson to mark it cancelled or rescheduled</div>
+      ${lessonHtml}
+    </div>
+    <div class="detail-section">
+      <h3>Payment Schedule</h3>
+      <div class="timeline">${tlHtml}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
+      ${s.phone ? `<button class="btn btn-whatsapp" onclick="sendWhatsApp('${s.id}')">💬 Send WhatsApp Reminder</button>` : ''}
+      <button class="btn btn-success" onclick="markPaid('${s.id}')">✓ Mark Period as Paid</button>
+      <button class="btn btn-success" onclick="addToGoogleCalendar('${s.id}')">📅 Add to Google Calendar</button>
+      <button class="btn btn-outline" onclick="editStudent('${s.id}')">✏️ Edit Student</button>
+      <button class="btn btn-danger" onclick="deleteStudent('${s.id}')">🗑 Delete Student</button>
+    </div>
+  `;
+  document.getElementById('modal-detail-content').innerHTML = html;
+  openModal('modal-detail');
+}
+
+// ===================== CANCEL / RESCHEDULE =====================
+function openCancelLesson(studentId, dateKey) {
+  const s = students.find(st => st.id === studentId);
+  if (!s) return;
+  const d = new Date(dateKey);
+  document.getElementById('cancel-student-id').value = studentId;
+  document.getElementById('cancel-lesson-date').value = dateKey;
+  document.getElementById('modal-cancel-title').textContent = 'Cancel / Reschedule Lesson';
+  document.getElementById('cancel-lesson-info').innerHTML =
+    `<strong>${s.name}</strong><br>${DAY_NAMES[d.getDay()]}, ${formatDate(d)}`;
+  document.getElementById('cancel-type').value = 'rescheduled';
+  document.getElementById('cancel-new-date').value = '';
+  onCancelTypeChange();
+  updateCancelImpact();
+  openModal('modal-cancel');
+}
+
+function onCancelTypeChange() {
+  const t = document.getElementById('cancel-type').value;
+  document.getElementById('reschedule-date-row').style.display = t === 'rescheduled' ? 'block' : 'none';
+  updateCancelImpact();
+}
+
+function updateCancelImpact() {
+  const sid = document.getElementById('cancel-student-id').value;
+  const key = document.getElementById('cancel-lesson-date').value;
+  const type = document.getElementById('cancel-type').value;
+  const el = document.getElementById('cancel-payment-impact');
+  if (!sid || !key) { el.style.display = 'none'; return; }
+  const s = students.find(st => st.id === sid);
+  if (!s) return;
+
+  const cur = settings.currency || 'HKD';
+  const fee = parseFloat(s.fee || 0);
+
+  if (type === 'cancelled') {
+    el.innerHTML = `⚠️ This lesson will be <strong style="color:var(--danger)">deducted from payment</strong> — the amount due will decrease by <strong>${cur} ${fee.toFixed(2)}</strong>.`;
+    el.style.display = 'block';
+  } else {
+    const newDate = document.getElementById('cancel-new-date').value;
+    if (newDate) {
+      el.innerHTML = `✅ Lesson moved to <strong>${formatDate(new Date(newDate))}</strong>. Payment amount stays the same — makeup lesson is counted.`;
+      el.style.display = 'block';
+    } else {
+      el.innerHTML = `📅 Pick a new date. The makeup lesson will be counted in the period it falls in.`;
+      el.style.display = 'block';
+    }
+  }
+}
+
+function confirmCancelLesson() {
+  const sid = document.getElementById('cancel-student-id').value;
+  const key = document.getElementById('cancel-lesson-date').value;
+  const type = document.getElementById('cancel-type').value;
+  const s = students.find(st => st.id === sid);
+  if (!s) return;
+
+  if (type === 'rescheduled') {
+    const newDate = document.getElementById('cancel-new-date').value;
+    if (!newDate) { alert('Please select the new lesson date.'); return; }
+    if (newDate === key) { alert('New date must be different from the original.'); return; }
+    if (!s.lessonOverrides) s.lessonOverrides = {};
+    s.lessonOverrides[key] = { status: 'rescheduled', reschedTo: newDate };
+    showToast('Lesson rescheduled ✓');
+  } else {
+    if (!s.lessonOverrides) s.lessonOverrides = {};
+    s.lessonOverrides[key] = { status: 'cancelled' };
+    showToast('Lesson cancelled ✓');
+  }
+
+  save();
+  closeModal('modal-cancel');
+  openDetail(sid); // refresh detail view
+}
+
+function undoCancelLesson(studentId, dateKey) {
+  const s = students.find(st => st.id === studentId);
+  if (!s || !s.lessonOverrides) return;
+  delete s.lessonOverrides[dateKey];
+  save();
+  openDetail(studentId);
+  showToast('Restored ✓');
+}
+
+// ===================== WHATSAPP =====================
+function sendWhatsApp(id) {
+  const s = students.find(st => st.id === id);
+  if (!s) return;
+  const next = getNextPaymentDate(s);
+  const { count: lessons, amount: amt } = getNextPeriodInfo(s);
+  const cur = settings.currency || 'HKD';
+  let msg = msgTemplate || "Hi {name}'s parent, {amount} is due on {date}.";
+  msg = msg.replaceAll('{name}', s.name)
+           .replaceAll('{amount}', `${cur} ${amt.toFixed(2)}`)
+           .replaceAll('{date}', next ? formatDate(next) : 'soon')
+           .replaceAll('{lessons}', `${lessons} lessons`);
+  const phone = s.phone.replace(/[^0-9]/g, '');
+  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+// ===================== GOOGLE CALENDAR =====================
+function addToGoogleCalendar(id) {
+  const s = students.find(st => st.id === id);
+  if (!s) return;
+  const dates = getPaymentDates(s, 6);
+  const cur = settings.currency || 'HKD';
+  if (!confirm(`This will open ${dates.length} Google Calendar tabs (one per payment date). Continue?`)) return;
+  dates.forEach((d, i) => {
+    setTimeout(() => {
+      const cdays = getCollectDays(s);
+      const periodStart = new Date(d); periodStart.setDate(periodStart.getDate() - cdays);
+      const n = getLessonDates(s, d).filter(l => l.date > periodStart && l.date <= d).length;
+      const periodAmt = Math.round(n * parseFloat(s.fee||0) * 100) / 100;
+      const ymd = d.toISOString().replace(/-/g,'').slice(0,8);
+      const title = encodeURIComponent(`\uD83D\uDCB0 ${s.name} Tuition: ${cur} ${periodAmt.toFixed(2)}`);
+      const desc = encodeURIComponent(`Tuition collection for ${s.name}\nAmount: ${cur} ${periodAmt.toFixed(2)}\nLessons: ${n}`);
+      window.open(`https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${ymd}/${ymd}&details=${desc}`, '_blank');
+    }, i * 600);
+  });
+  showToast('Opening Google Calendar tabs... \u2713');
+}
+
+function openGoogleCalendar() {
+  window.open('https://calendar.google.com', '_blank');
+}
+
+// ===================== MARK PAID =====================
+function markPaid(id) {
+  const s = students.find(st => st.id === id);
+  if (!s) return;
+  const next = getNextPaymentDate(s);
+  if (!next) return;
+  // Push start date forward by one collection period
+  const cdays = getCollectDays(s);
+  const newStart = new Date(s.startDate);
+  newStart.setDate(newStart.getDate() + cdays);
+  s.startDate = newStart.toISOString().slice(0, 10);
+  save();
+  renderAll();
+  closeModal('modal-detail');
+  showToast(`${s.name} marked as paid ✓`);
+}
+
+// ===================== ADD / EDIT =====================
+function openAddStudent() {
+  document.getElementById('modal-add-title').textContent = 'Add Student';
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-phone').value = '';
+  document.getElementById('f-startdate').value = new Date().toISOString().slice(0,10);
+  document.getElementById('f-freq').value = 'weekly';
+  document.getElementById('f-fee').value = '';
+  document.getElementById('f-collect').value = 'monthly';
+  document.getElementById('f-notes').value = '';
+  document.getElementById('f-edit-id').value = '';
+  document.getElementById('custom-freq-row').style.display = 'none';
+  document.getElementById('custom-collect-row').classList.remove('visible');
+  document.getElementById('day-picker-row').style.display = 'none';
+  setSelectedDays([]);
+  openModal('modal-add');
+}
+
+function editStudent(id) {
+  closeModal('modal-detail');
+  const s = students.find(st => st.id === id);
+  if (!s) return;
+  document.getElementById('modal-add-title').textContent = 'Edit Student';
+  document.getElementById('f-name').value = s.name;
+  document.getElementById('f-phone').value = s.phone || '';
+  document.getElementById('f-startdate').value = s.startDate;
+  document.getElementById('f-freq').value = s.freq;
+  document.getElementById('f-fee').value = s.fee;
+  document.getElementById('f-collect').value = s.collect;
+  document.getElementById('f-notes').value = s.notes || '';
+  document.getElementById('f-edit-id').value = id;
+  document.getElementById('custom-freq-row').classList.toggle('visible', s.freq === 'custom');
+  document.getElementById('custom-collect-row').classList.toggle('visible', s.collect === 'custom');
+  if (s.freq === 'custom') document.getElementById('f-customfreq').value = s.customFreq || '';
+  if (s.collect === 'custom') document.getElementById('f-customcollect').value = s.customCollect || '';
+  // Restore day picker
+  const showDays = ['twice','thrice','custom'].includes(s.freq);
+  document.getElementById('day-picker-row').style.display = showDays ? 'block' : 'none';
+  setSelectedDays(s.lessonDays || []);
+  openModal('modal-add');
+}
+
+function saveStudent() {
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { alert('Please enter the student name.'); return; }
+  const startDate = document.getElementById('f-startdate').value;
+  if (!startDate) { alert('Please select the first lesson date.'); return; }
+  const fee = document.getElementById('f-fee').value;
+  if (!fee) { alert('Please enter the fee per lesson.'); return; }
+
+  const freq = document.getElementById('f-freq').value;
+  const lessonDays = ['twice','thrice','custom'].includes(freq) ? getSelectedDays() : [];
+
+  const data = {
+    name,
+    phone: document.getElementById('f-phone').value.trim(),
+    startDate,
+    freq,
+    customFreq: document.getElementById('f-customfreq').value,
+    fee,
+    collect: document.getElementById('f-collect').value,
+    customCollect: document.getElementById('f-customcollect').value,
+    notes: document.getElementById('f-notes').value.trim(),
+    lessonDays,
+  };
+
+  const editId = document.getElementById('f-edit-id').value;
+  if (editId) {
+    const idx = students.findIndex(s => s.id === editId);
+    if (idx !== -1) { students[idx] = { ...students[idx], ...data }; }
+  } else {
+    data.id = uid();
+    students.push(data);
+  }
+
+  save();
+  closeModal('modal-add');
+  renderAll();
+  showToast(editId ? 'Student updated ✓' : 'Student added ✓');
+}
+
+function deleteStudent(id) {
+  if (!confirm('Delete this student and all their data?')) return;
+  students = students.filter(s => s.id !== id);
+  save();
+  closeModal('modal-detail');
+  renderAll();
+  showToast('Student deleted');
+}
+
+// ===================== SELECTS + DAY PICKER =====================
+const DAY_FULL = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+function onFreqChange() {
+  const v = document.getElementById('f-freq').value;
+  const showCustom = v === 'custom';
+  const showDays = ['twice','thrice','custom'].includes(v);
+  document.getElementById('custom-freq-row').style.display = showCustom ? 'block' : 'none';
+  document.getElementById('day-picker-row').style.display = showDays ? 'block' : 'none';
+  if (showDays) updateDayPickerHint();
+}
+
+function toggleDay(dayNum) {
+  const btn = document.querySelector(`#day-picker .day-btn[data-day="${dayNum}"]`);
+  if (btn) btn.classList.toggle('selected');
+  updateDayPickerHint();
+}
+
+function updateDayPickerHint() {
+  const selected = getSelectedDays();
+  const freq = document.getElementById('f-freq').value;
+  const hint = document.getElementById('day-count-hint');
+  if (!hint) return;
+  let needed = freq === 'twice' ? 2 : freq === 'thrice' ? 3 : null;
+  if (freq === 'custom') needed = parseInt(document.getElementById('f-customfreq').value) || 0;
+  if (selected.length === 0) {
+    hint.textContent = ''; hint.style.color = '';
+  } else if (needed && selected.length !== needed) {
+    hint.textContent = `(${selected.length}/${needed} selected)`;
+    hint.style.color = 'var(--warning)';
+  } else {
+    hint.textContent = selected.map(d => DAY_FULL[d]).join(', ');
+    hint.style.color = 'var(--success)';
+  }
+}
+
+function getSelectedDays() {
+  return Array.from(document.querySelectorAll('#day-picker .day-btn.selected'))
+    .map(b => parseInt(b.dataset.day))
+    .sort((a,b) => a - b);
+}
+
+function setSelectedDays(days) {
+  document.querySelectorAll('#day-picker .day-btn').forEach(b => {
+    b.classList.toggle('selected', (days||[]).map(Number).includes(parseInt(b.dataset.day)));
+  });
+  updateDayPickerHint();
+}
+
+function onCollectChange() {
+  const v = document.getElementById('f-collect').value;
+  document.getElementById('custom-collect-row').classList.toggle('visible', v === 'custom');
+}
+
+// ===================== TABS =====================
+let currentTab = 'dashboard';
+
+function switchTab(tab) {
+  currentTab = tab;
+  ['dashboard','students','alerts','message'].forEach(t => {
+    document.getElementById(`sec-${t}`).classList.toggle('active', t === tab);
+    document.getElementById(`nav-${t}`).classList.toggle('active', t === tab);
+  });
+  if (tab === 'alerts') renderAlerts();
+  if (tab === 'dashboard') renderDashboard();
+  if (tab === 'students') renderStudents();
+  if (tab === 'message') {
+    document.getElementById('msg-template').value = msgTemplate;
+    updateMsgPreview();
+  }
+}
+
+// ===================== MODALS =====================
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) closeModal(overlay.id);
+  });
+});
+
+// ===================== SETTINGS =====================
+function openSettings() {
+  document.getElementById('toggle-notif').classList.toggle('on', settings.notifications);
+  const db = document.getElementById('days-before');
+  db.value = settings.daysBefore || 1;
+  const cs = document.getElementById('currency-sym');
+  cs.value = settings.currency || 'HKD';
+  openModal('modal-settings');
+}
+
+function toggleNotif() {
+  if (!settings.notifications) {
+    // Detect iOS Safari running in browser tab (not installed as PWA)
+    const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent);
+    const isStandalone = window.navigator.standalone === true;
+    if (isIOS && !isStandalone) {
+      showInstallHint();
+      return;
+    }
+    if (!('Notification' in window) && !swReg) {
+      showToast('Notifications not supported on this browser');
+      return;
+    }
+    const doRequest = () => {
+      Notification.requestPermission().then(p => {
+        settings.notifications = p === 'granted';
+        localStorage.setItem('tt_settings', JSON.stringify(settings));
+        document.getElementById('toggle-notif').classList.toggle('on', settings.notifications);
+        if (p === 'denied') showToast('Notifications blocked — check browser settings');
+        else if (p === 'granted') { showToast('Notifications enabled \u2713'); checkNotifications(); }
+      });
+    };
+    // Safari requires permission request inside a user gesture — call directly
+    if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+      doRequest();
+    } else if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      settings.notifications = true;
+      localStorage.setItem('tt_settings', JSON.stringify(settings));
+      document.getElementById('toggle-notif').classList.add('on');
+      showToast('Notifications enabled \u2713');
+    } else {
+      doRequest();
+    }
+  } else {
+    settings.notifications = false;
+    localStorage.setItem('tt_settings', JSON.stringify(settings));
+    document.getElementById('toggle-notif').classList.remove('on');
+    showToast('Notifications disabled');
+  }
+}
+
+function showInstallHint() {
+  // Show a modal explaining how to install on iOS
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.75);display:flex;align-items:flex-end';
+  overlay.innerHTML = `<div style="width:100%;background:#1a1a2e;border-radius:24px 24px 0 0;padding:28px 24px 44px;border-top:1px solid rgba(124,92,252,0.3)">
+    <div style="width:40px;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;margin:0 auto 20px"></div>
+    <div style="font-size:24px;margin-bottom:12px;text-align:center">📲</div>
+    <div style="font-size:17px;font-weight:600;margin-bottom:10px;text-align:center">Install the App First</div>
+    <div style="font-size:14px;color:#a8a0cc;line-height:1.7;margin-bottom:20px">
+      iPhone requires the app to be installed on your home screen before notifications can work.<br><br>
+      <strong style="color:#f0eeff">Steps:</strong><br>
+      1. Tap the <strong style="color:#f0eeff">Share button</strong> <span style="font-size:16px">⬆️</span> at the bottom of Safari<br>
+      2. Scroll down and tap <strong style="color:#7c5cfc">"Add to Home Screen"</strong><br>
+      3. Tap <strong style="color:#f0eeff">Add</strong> in the top right<br>
+      4. Open the app from your home screen<br>
+      5. Come back to Settings and enable notifications
+    </div>
+    <button onclick="this.closest('div[style]').remove()" style="width:100%;padding:14px;background:linear-gradient(135deg,#7c5cfc,#9b7aff);border:none;border-radius:10px;color:white;font-size:15px;font-weight:600;cursor:pointer">Got it!</button>
+  </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+}
+
+// ===================== EXPORT / IMPORT =====================
+function exportData() {
+  const data = JSON.stringify({ students, settings, msgTemplate }, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'tuitiontrack-backup.json';
+  a.click(); URL.revokeObjectURL(url);
+}
+
+function importData() {
+  document.getElementById('import-file').click();
+}
+
+function doImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (data.students) students = data.students;
+      if (data.settings) settings = { ...settings, ...data.settings };
+      if (data.msgTemplate) msgTemplate = data.msgTemplate;
+      save();
+      renderAll();
+      closeModal('modal-settings');
+      showToast('Data imported ✓');
+    } catch(err) {
+      alert('Invalid backup file.');
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ===================== NOTIFICATIONS =====================
+let swReg = null;
+
+async function checkNotifications() {
+  if (!settings.notifications) return;
+  if (Notification.permission !== 'granted') return;
+  const due = getDueStudents();
+  if (!due.length) return;
+  const cur = settings.currency || 'HKD';
+  for (const s of due) {
+    const amt = getAmountPerPeriod(s);
+    const title = 'TuitionTrack \uD83D\uDD14';
+    const body = `${s.name}: ${cur} ${amt.toFixed(2)} is due for collection!`;
+    if (swReg) {
+      try { await swReg.showNotification(title, { body, tag: s.id, vibrate: [200,100,200] }); continue; } catch(e) {}
+    }
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification(title, { body, tag: s.id });
+    }
+  }
+}
+
+// ===================== TOAST =====================
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = `position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--surface3);color:var(--text);padding:10px 20px;border-radius:20px;font-size:13px;z-index:999;white-space:nowrap;border:1px solid var(--border)`;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+
+// ===================== RENDER ALL =====================
+function renderAll() {
+  renderDashboard();
+  renderStudents();
+  const due = getDueStudents();
+  document.getElementById('notif-badge').style.display = due.length > 0 ? 'block' : 'none';
+}
+
+// ===================== INIT =====================
+window.addEventListener('load', async () => {
+  load();
+
+  // Register service worker (required for iOS Safari push notifications)
+  if ('serviceWorker' in navigator) {
+    try {
+      swReg = await navigator.serviceWorker.register('./sw.js', { scope: './' });
+    } catch(e) {
+      console.warn('SW registration failed:', e);
+    }
+  }
+
+  // Set today as default start date
+  document.getElementById('f-startdate').value = new Date().toISOString().slice(0,10);
+
+  renderAll();
+
+  // Hide splash
+  setTimeout(() => {
+    document.getElementById('splash').classList.add('hidden');
+    document.getElementById('app').classList.add('visible');
+    setTimeout(() => document.getElementById('splash').remove(), 600);
+  }, 1200);
+
+  // Check notifications on load and then every hour
+  checkNotifications();
+  setInterval(checkNotifications, 3600000);
+});
+</script>
+</body>
+</html>
